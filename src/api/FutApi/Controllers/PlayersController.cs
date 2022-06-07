@@ -29,6 +29,21 @@ namespace FutApi.Controllers
             _playersService = playersService;
         }
 
+        [HttpGet("market")]
+        public async Task<PlayersSellResponse> SellPlayersFromMarket(
+            string token,
+            [Required]
+            long discardValue,
+            int total = 20)
+        {
+            _futService.SetSidToken(token);
+
+            var players = await _futService.GetPlayersTradePile();
+
+            return null;
+        }
+
+        [Obsolete("Usar /market")]
         [HttpGet]
         public async Task<PlayersSellResponse> Get(
             string token,  

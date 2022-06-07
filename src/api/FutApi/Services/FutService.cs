@@ -41,9 +41,9 @@ namespace FutApi.Services
                 _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-UT-SID", SidToken);
         }
 
-        public async Task<List<ItemDatum>> GetClubPlayersAsync(int start = 0)
+        public async Task<List<ItemData>> GetClubPlayersAsync(int start = 0)
         {
-            var cacheItems = _memoryCache.Get<List<ItemDatum>>("GetClubPlayersAsync");
+            var cacheItems = _memoryCache.Get<List<ItemData>>("GetClubPlayersAsync");
             if (cacheItems != null)
             {
                 _logger.LogInformation($"Getting GetClubPlayersAsync from cache. {cacheItems.Count} players");
@@ -51,7 +51,7 @@ namespace FutApi.Services
                 return cacheItems;
             }
 
-            var items = new List<ItemDatum>();
+            var items = new List<ItemData>();
 
             var count = 1;
 
@@ -104,9 +104,7 @@ namespace FutApi.Services
 
                 var query = $"num=21&start={start}&type=player&maskedDefId={assedId}&maxb={maxBid}";
 
-                var url = $"https://utas.external.s2.fut.ea.com/ut/game/fifa22/transfermarket?{query}";
-
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync($"transfermarket?{query}");
                 if (!response.IsSuccessStatusCode)
                     break;
 
@@ -133,18 +131,6 @@ namespace FutApi.Services
             return transfer;
         }
 
-        public async Task<bool> AtualizarJogadorTransferencia(long id)
-        {
-            var request = new
-            {
-                itemData = new[] { new { id, pile = "trade" } }
-            };
-
-            var response = await _httpClient.PutAsJsonAsync($"https://utas.external.s2.fut.ea.com/ut/game/fifa22/item", request);
-
-            return response.IsSuccessStatusCode;
-        }
-
         public async Task<bool> VenderJogador(long id, long buyNowPrice, long startingBid, long duration = 3600)
         {
             if (startingBid < 650)
@@ -167,11 +153,11 @@ namespace FutApi.Services
                 buyNowPrice
             };
 
-            var transferiu = await AtualizarJogadorTransferencia(id);
+            var transferiu = await MoverJogadorParaListaDeTransferencias(id);
             if (!transferiu)
                 return false;
 
-            var cacheItems = _memoryCache.Get<List<ItemDatum>>("GetClubPlayersAsync");
+            var cacheItems = _memoryCache.Get<List<ItemData>>("GetClubPlayersAsync");
             if (cacheItems != null)
             {
                 var removed = cacheItems.RemoveAll(x => x.Id == id);
@@ -183,6 +169,32 @@ namespace FutApi.Services
             var response = await _httpClient.PostAsJsonAsync($"https://utas.external.s2.fut.ea.com/ut/game/fifa22/auctionhouse", request);
 
             return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> MoverJogadorParaListaDeTransferencias(long playerId)
+        {
+            var request = new
+            {
+                itemData = new[] { new { playerId, pile = "trade" } }
+            };
+
+            var response = await _httpClient.PutAsJsonAsync($"https://utas.external.s2.fut.ea.com/ut/game/fifa22/item", request);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<PlayersTradePile> GetPlayersTradePile()
+        {
+            var response = await _httpClient.GetAsync("tradepile");
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var playersTradePile = JsonConvert.DeserializeObject<PlayersTradePile>(json);
+
+            return playersTradePile;
         }
     }
 }

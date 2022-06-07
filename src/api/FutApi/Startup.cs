@@ -31,7 +31,10 @@ namespace FutApi
 
             services.AddMemoryCache();
 
-            services.AddHttpClient<FutService>();
+            services.AddHttpClient<FutService>(x =>
+            {
+                x.BaseAddress = new Uri(Configuration.GetValue<string>("FutService:Url"));
+            });
             services.AddHttpClient<PlayersService>();
 
             services.AddSwaggerGen(c =>
