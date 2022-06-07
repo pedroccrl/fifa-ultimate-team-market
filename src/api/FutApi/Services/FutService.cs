@@ -31,7 +31,9 @@ namespace FutApi.Services
             _logger = logger;
         }
 
-        string Token => _configuration.GetValue<string>("Token");
+        string Token => _configuration.GetValue<string>("ServiceToken");
+        string Year => _configuration.GetValue<string>("ServiceYear");
+        string PlayersJsonParam => _configuration.GetValue<string>("ServicePlayersJsonParameter");
         string SidToken => _sidToken;
         
         public void SetSidToken(string token)
@@ -52,7 +54,7 @@ namespace FutApi.Services
                 return cachePlayers;
             }
 
-            var response = await _httpClient.GetAsync($"https://www.ea.com/fifa/ultimate-team/web-app/content/{Token}/2022/fut/items/web/players.json?_=22249");
+            var response = await _httpClient.GetAsync($"https://www.ea.com/fifa/ultimate-team/web-app/content/{Token}/{Year}/fut/items/web/players.json?_={PlayersJsonParam}");
 
             var json = await response.Content.ReadAsStringAsync();
 
