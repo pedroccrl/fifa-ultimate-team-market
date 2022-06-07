@@ -32,6 +32,7 @@ namespace FutApi
             services.AddMemoryCache();
 
             services.AddHttpClient<FutService>();
+            services.AddHttpClient<PlayersService>();
 
             services.AddSwaggerGen(c =>
             {

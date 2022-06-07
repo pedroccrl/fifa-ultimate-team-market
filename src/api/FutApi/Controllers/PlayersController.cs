@@ -17,13 +17,16 @@ namespace FutApi.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly FutService _futService;
+        private readonly PlayersService _playersService;
 
         public PlayersController(
             IConfiguration configuration,
-            FutService futService)
+            FutService futService,
+            PlayersService playersService)
         {
             _configuration = configuration;
             _futService = futService;
+            _playersService = playersService;
         }
 
         [HttpGet]
@@ -33,10 +36,11 @@ namespace FutApi.Controllers
             long discardValue,
             int total = 20)
         {
-            _futService.SetSidToken(token);
 
+            var players = await _playersService.GetPlayersAsync();
+
+            _futService.SetSidToken(token);
             var club = await _futService.GetClubPlayersAsync();
-            var players = await _futService.GetPlayersAsync();
 
             var playersSell = new List<PlayerSell>();
 

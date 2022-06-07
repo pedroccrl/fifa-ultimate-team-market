@@ -31,9 +31,6 @@ namespace FutApi.Services
             _logger = logger;
         }
 
-        string Token => _configuration.GetValue<string>("ServiceToken");
-        string Year => _configuration.GetValue<string>("ServiceYear");
-        string PlayersJsonParam => _configuration.GetValue<string>("ServicePlayersJsonParameter");
         string SidToken => _sidToken;
         
         public void SetSidToken(string token)
@@ -42,27 +39,6 @@ namespace FutApi.Services
 
             if (!_httpClient.DefaultRequestHeaders.Contains("X-UT-SID"))
                 _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-UT-SID", SidToken);
-        }
-
-        public async Task<PlayersContent> GetPlayersAsync()
-        {
-            var cachePlayers = _memoryCache.Get<PlayersContent>("GetPlayersAsync");
-            if (cachePlayers != null)
-            {
-                _logger.LogInformation($"Getting GetPlayersAsync from cache. {cachePlayers.Players.Count} players");
-                
-                return cachePlayers;
-            }
-
-            var response = await _httpClient.GetAsync($"https://www.ea.com/fifa/ultimate-team/web-app/content/{Token}/{Year}/fut/items/web/players.json?_={PlayersJsonParam}");
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            var players = JsonConvert.DeserializeObject<PlayersContent>(json);
-
-            _memoryCache.Set<PlayersContent>("GetPlayersAsync", players);
-
-            return players;
         }
 
         public async Task<List<ItemDatum>> GetClubPlayersAsync(int start = 0)
