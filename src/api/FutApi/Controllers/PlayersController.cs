@@ -36,11 +36,61 @@ namespace FutApi.Controllers
             long discardValue,
             int total = 20)
         {
+            var futPlayers = await _playersService.GetPlayersAsync();
+
             _futService.SetSidToken(token);
 
             var players = await _futService.GetPlayersTradePile();
 
-            return null;
+            players.AuctionInfo = players.AuctionInfo.Where(x => x.TradeId == 0 &&
+                                         x.ItemData.ItemType == "player" &&
+                                         x.ItemData.ItemState == "free").ToList();
+
+            var playersOrdered = players
+                .AuctionInfo
+                
+                .OrderByDescending(x => x.ItemData.DiscardValue);
+
+            var playersSell = new List<PlayerSell>();
+
+            foreach (var player in playersOrdered.Take(total))
+            {
+                var itemData = player.ItemData;
+
+                var playerAsset = futPlayers.Players.FirstOrDefault(x => x.AssetId == itemData.AssetId);
+                if (playerAsset == null)
+                    continue;
+
+                var market = await _futService.GetTransferListAsync(itemData.AssetId, 150000);
+
+                var sell = new PlayerSell
+                {
+                    AssetId = itemData.AssetId,
+                    Id = itemData.Id,
+                    Rating = itemData.Rating,
+                    ValorVenda = itemData.DiscardValue,
+                };
+
+                if (market.Count > 0)
+                {
+                    var minMarket = market.Min(x => x.BuyNowPrice);
+                    sell.MenorPrecoMercado = minMarket;
+
+                    sell.Vendeu = await _futService.VenderJogador(itemData.Id, minMarket, minMarket - 100);
+                }
+
+                playersSell.Add(sell);
+            }
+
+            return new PlayersSellResponse
+            {
+                Players = playersSell,
+                TotalVendaRapida = playersSell.Sum(x => x.ValorVenda),
+                TotalVendaMercado = playersSell.Sum(x => x.MenorPrecoMercado == 0 ? x.ValorVenda : x.MenorPrecoMercado),
+                TotalJogadores = players.AuctionInfo.Count,
+                TotalErro = playersSell.Sum(x => !x.Vendeu ? 1 : 0),
+                TotalVendido = playersSell.Sum(x => x.Vendeu ? 1 : 0),
+            };
         }
 
         [Obsolete("Usar /market")]
@@ -61,8 +111,8 @@ namespace FutApi.Controllers
 
             var clubPlayers = club
                 .Where(x => x.Untradeable == false && x.DiscardValue >= discardValue)
-                .Take(total)
                 .OrderByDescending(x => x.DiscardValue)
+                .Take(total)
                 .ToList();
 
             foreach (var player in clubPlayers)
@@ -86,7 +136,12 @@ namespace FutApi.Controllers
                 {
                     var minMarket = market.Min(x => x.BuyNowPrice);
                     sell.MenorPrecoMercado = minMarket;
-                    sell.Vendeu = await _futService.VenderJogador(player.Id, minMarket, minMarket - 100);
+
+                    var moveuParaTransferencia = await _futService.MoverJogadorParaListaDeTransferencias(player.Id);
+                    if (moveuParaTransferencia)
+                    {
+                        sell.Vendeu = await _futService.VenderJogador(player.Id, minMarket, minMarket - 100);
+                    }
                 }
                 else
                 {

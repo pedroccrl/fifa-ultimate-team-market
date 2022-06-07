@@ -153,20 +153,12 @@ namespace FutApi.Services
                 buyNowPrice
             };
 
-            var transferiu = await MoverJogadorParaListaDeTransferencias(id);
-            if (!transferiu)
-                return false;
+            var response = await _httpClient.PostAsJsonAsync("auctionhouse", request);
 
-            var cacheItems = _memoryCache.Get<List<ItemData>>("GetClubPlayersAsync");
-            if (cacheItems != null)
+            if (!response.IsSuccessStatusCode)
             {
-                var removed = cacheItems.RemoveAll(x => x.Id == id);
-                _logger.LogInformation($"Removendo jogador {id} da lista");
-
-                _memoryCache.Set("GetClubPlayersAsync", cacheItems, TimeSpan.FromSeconds(10 * 60));
+                var json = await response.Content.ReadAsStringAsync();
             }
-
-            var response = await _httpClient.PostAsJsonAsync($"https://utas.external.s2.fut.ea.com/ut/game/fifa22/auctionhouse", request);
 
             return response.IsSuccessStatusCode;
         }
@@ -179,6 +171,15 @@ namespace FutApi.Services
             };
 
             var response = await _httpClient.PutAsJsonAsync($"https://utas.external.s2.fut.ea.com/ut/game/fifa22/item", request);
+
+            var cacheItems = _memoryCache.Get<List<ItemData>>("GetClubPlayersAsync");
+            if (response.IsSuccessStatusCode && cacheItems != null)
+            {
+                var removed = cacheItems.RemoveAll(x => x.Id == playerId);
+                _logger.LogInformation($"Removendo jogador {playerId} da lista");
+
+                _memoryCache.Set("GetClubPlayersAsync", cacheItems, TimeSpan.FromSeconds(10 * 60));
+            }
 
             return response.IsSuccessStatusCode;
         }
