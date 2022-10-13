@@ -32,8 +32,6 @@ namespace FutApi.Controllers
         [HttpGet("market")]
         public async Task<PlayersSellResponse> SellPlayersFromMarket(
             string token,
-            [Required]
-            long discardValue,
             int total = 20)
         {
             var futPlayers = await _playersService.GetPlayersAsync();
