@@ -1,12 +1,10 @@
-﻿using FutApi.Models;
-using FutApi.Services;
+﻿using FutApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
 
 namespace FutApi.Controllers
@@ -46,7 +44,6 @@ namespace FutApi.Controllers
 
             var playersOrdered = players
                 .AuctionInfo
-                
                 .OrderByDescending(x => x.ItemData.DiscardValue);
 
             var playersSell = new List<PlayerSell>();
@@ -94,7 +91,7 @@ namespace FutApi.Controllers
         [Obsolete("Usar /market")]
         [HttpGet]
         public async Task<PlayersSellResponse> Get(
-            string token,  
+            string token,
             [Required]
             long discardValue,
             int total = 20)
@@ -152,10 +149,10 @@ namespace FutApi.Controllers
             return new PlayersSellResponse
             {
                 Players = playersSell,
-                TotalVendaRapida = playersSell.Sum(x=>x.ValorVenda),
+                TotalVendaRapida = playersSell.Sum(x => x.ValorVenda),
                 TotalVendaMercado = playersSell.Sum(x => x.MenorPrecoMercado == 0 ? x.ValorVenda : x.MenorPrecoMercado),
                 TotalJogadores = clubPlayers.Count,
-                TotalErro = playersSell.Sum(x=> !x.Vendeu ? 1 : 0),
+                TotalErro = playersSell.Sum(x => !x.Vendeu ? 1 : 0),
                 TotalVendido = playersSell.Sum(x => x.Vendeu ? 1 : 0),
             };
         }

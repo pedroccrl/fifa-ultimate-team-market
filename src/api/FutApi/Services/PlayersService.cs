@@ -33,7 +33,7 @@ namespace FutApi.Services
             var token = cfgSection.GetValue<string>("Token");
             var jsonParameter = cfgSection.GetValue<string>("JsonParameter");
 
-            _url = $"https://www.ea.com/fifa/ultimate-team/web-app/content/{token}/{futYear}/fut/items/web/players.json?_={jsonParameter}";
+            _url = $"https://www.ea.com/ea-sports-fc/ultimate-team/web-app/content/{token}/{futYear}/fut/items/web/players.json?_={jsonParameter}";
         }
 
         public async Task<PlayersContent> GetPlayersAsync()

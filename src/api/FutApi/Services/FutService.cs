@@ -68,7 +68,7 @@ namespace FutApi.Services
                     excldef = "167948,84117361,164240,216267,50558438,209331,84107443,50518590,208722,67350066,20801,237692,212188,195864,50540069,192505,231677,205452,232488,0,200145,0,205498"
                 };
 
-                var response = await _httpClient.PostAsJsonAsync($"https://utas.mob.v1.fut.ea.com/ut/game/fifa23/club", request);
+                var response = await _httpClient.PostAsJsonAsync($"https://utas.mob.v2.fut.ea.com/ut/game/fc24/club", request);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -172,7 +172,7 @@ namespace FutApi.Services
                 itemData = new[] { new { playerId, pile = "trade" } }
             };
 
-            var response = await _httpClient.PutAsJsonAsync($"https://utas.mob.v1.fut.ea.com/ut/game/fifa23/item", request);
+            var response = await _httpClient.PutAsJsonAsync($"https://utas.mob.v2.fut.ea.com/ut/game/fc24/item", request);
 
             var cacheItems = _memoryCache.Get<List<ItemData>>("GetClubPlayersAsync");
             if (response.IsSuccessStatusCode && cacheItems != null)
